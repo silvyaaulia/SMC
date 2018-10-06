@@ -1,9 +1,11 @@
 /* Draft Syergie Main Control (SMC)
-   Speed control:
-   > 4 unit
-   > without switch
-   > manual input in program
- */
+----------------------------------------
+Speed control:
+> for 4 unit propeller 
+> without switch 
+> manual input in program
+----------------------------------------
+*/
 
 /* Library ethernet */
 #include <SPI.h>

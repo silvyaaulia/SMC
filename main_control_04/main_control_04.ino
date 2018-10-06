@@ -4,7 +4,11 @@ Main Control:
 on   : input from joystick
 off  : manual input from Pixhawk
 ----------------------------------------
-steer Control:
+Speed Control:
+> 4 unit with switch (and LED indicator)
+> input manual (belum pakai joystick)
+----------------------------------------
+Steer Control:
 > 4 unit with switch (and LED indicator)
 > input manual (belum pakai joystick)
 ----------------------------------------
@@ -15,23 +19,38 @@ steer Control:
 #include <Ethernet.h>
 #include <PubSubClient.h>
 
-// joystick
+// Joystick
+#define joy_speed1 A0       //input joystick speed
+#define joy_speed2 A1
+#define joy_speed3 A2
+#define joy_speed4 A3
+
 #define joy_steer1 A4       //input joystick steer
 #define joy_steer2 A5
 #define joy_steer3 A6
 #define joy_steer4 A7
 
-// pin switch
+// Pin switch
 const int switch_main = 22; // input swicth main
 const int pixhawk = 23;
+
+const int switch_speed1 = 26;  // input switch speed
+const int switch_speed2 = 27;
+const int switch_speed3 = 28;
+const int switch_speed4 = 29;
 
 const int switch_steer1 = 32;  //input switch steer
 const int switch_steer2 = 33;
 const int switch_steer3 = 34;
 const int switch_steer4 = 35;
 
-// initialize state
+// Initialize state
 int state_main = 0;     //state main
+
+int state_speed1 = 0;     //state speed
+int state_speed2 = 0;
+int state_speed3 = 0;
+int state_speed4 = 0;
 
 int state_steer1 = 0;     //state steer
 int state_steer2 = 0;
@@ -39,7 +58,12 @@ int state_steer3 = 0;
 int state_steer4 = 0;
 
 // LED indikator
-//int led_main;     //output main
+//int led_main;     //output speed
+
+int led_speed1;   //output speed
+int led_speed2;
+int led_speed3;
+int led_speed4;
 
 int led_steer1;   //output steer
 int led_steer2;
@@ -51,12 +75,13 @@ const int led_main = 13;
 //const int outLed1 = 13;
 //const int outLed2 = 12;
 
+double pulse_speed_in;
 double pulse_steer_in;
 
 double pulse_pixhawk;
 
 
-// input pulse speed and steer
+// Input pulse speed and steer
 const int a = 100;
 const int b = 300;
 const int c = 500;
@@ -100,6 +125,25 @@ void reconnect() {
   }
 }
 
+double pulse_speed(int joyspeed) {
+  if (joyspeed <=200){
+    pulse_speed_in = 1500;
+   }
+  else if (joyspeed <=400){
+    pulse_speed_in = 1600;
+   }
+  else if (joyspeed <=600){
+    pulse_speed_in = 1700;
+   }
+  else if (joyspeed <=800){
+    pulse_speed_in = 1800;
+   }
+  else{
+    pulse_speed_in = 1900; 
+   }
+  return pulse_speed_in;
+}
+
 double pulse_steer (int joysteer) {
   const int normal = 500; 
   if (joysteer <= normal){
@@ -119,6 +163,15 @@ void setup() {
   pinMode(switch_main, INPUT);       //input switch main
   digitalWrite(switch_main, HIGH);
   
+  pinMode(switch_speed1, INPUT);     //input switch speed
+  pinMode(switch_speed2, INPUT);
+  pinMode(switch_speed3, INPUT);
+  pinMode(switch_speed4, INPUT);
+  digitalWrite(switch_speed1, HIGH);
+  digitalWrite(switch_speed2, HIGH);
+  digitalWrite(switch_speed3, HIGH);
+  digitalWrite(switch_speed4, HIGH);
+
   pinMode(switch_steer1, INPUT);     //input switch steer
   pinMode(switch_steer2, INPUT);
   pinMode(switch_steer3, INPUT);
@@ -139,6 +192,7 @@ void setup() {
 }
 
 void loop() {
+  int pulse_speed_in1, pulse_speed_in2, pulse_speed_in3, pulse_speed_in4;
   int pulse_steer_in1, pulse_steer_in2, pulse_steer_in3, pulse_steer_in4;
   char msgBuffer[20];
 
@@ -154,6 +208,75 @@ void loop() {
     
     // main switch on, indicator on:
     Serial.println("SMC on");
+
+    /*Speed Control*/
+    int state_speed1 = digitalRead(switch_speed1);
+    int state_speed2 = digitalRead(switch_speed2);
+    int state_speed3 = digitalRead(switch_speed3);
+    int state_speed4 = digitalRead(switch_speed4);
+  
+    Serial.print(state_speed1);
+    Serial.print(state_speed2);
+    Serial.print(state_speed3);
+    Serial.print(state_speed4);
+
+    if (state_speed1 == LOW) {
+      digitalWrite(led_speed1, HIGH);
+      // int speed1 = analogRead(joy_speed1);
+      // switch on, indicator on:
+      Serial.print(" Speed1: ");
+      //pulse_speed_in1 = pulse_speed(speed1);
+      pulse_speed_in1 = pulse_speed(e);
+      Serial.print(pulse_speed_in1);
+      client.publish("spc_speed1",dtostrf(pulse_speed_in1, 5, 0, msgBuffer));
+      }
+      else {
+        digitalWrite(led_speed1, LOW);
+        }
+
+    if (state_speed2 == LOW) {
+      digitalWrite(led_speed2, HIGH);
+      // int speed2 = analogRead(joy_speed2);
+      // switch on, indicator on:
+      Serial.print(" Speed2: ");
+      //pulse_speed_in2 = pulse_speed(speed2);
+      pulse_speed_in2 = pulse_speed(a);
+      Serial.print(pulse_speed_in2);
+      client.publish("spc_speed2",dtostrf(pulse_speed_in2, 5, 0, msgBuffer));
+      }
+      else {
+        digitalWrite(led_speed2, LOW);
+        }
+
+    if (state_speed3 == LOW) {
+      digitalWrite(led_speed3, HIGH);
+      // int speed3 = analogRead(joy_speed3);
+      // switch on, indicator on:
+      Serial.print(" Speed3: ");
+      //pulse_speed_in3 = pulse_speed(speed3);
+      pulse_speed_in3 = pulse_speed(d);
+      Serial.print(pulse_speed_in3);
+      client.publish("spc_speed3",dtostrf(pulse_speed_in3, 5, 0, msgBuffer));
+      }
+      else {
+        digitalWrite(led_speed3, LOW);
+        }
+
+    if (state_speed4 == LOW) {
+      digitalWrite(led_speed4, HIGH);
+      // int speed4 = analogRead(joy_speed4);
+      // switch on, indicator on:
+      Serial.print(" Speed4: ");
+      //pulse_speed_in4 = pulse_speed(speed4);
+      pulse_speed_in4 = pulse_speed(b);
+      Serial.print(pulse_speed_in4);
+      client.publish("spc_speed4",dtostrf(pulse_speed_in4, 5, 0, msgBuffer));
+      }
+      else {
+        digitalWrite(led_speed4, LOW);
+      }
+  
+    Serial.println();
 
     /*Steer Control*/
     int state_steer1 = digitalRead(switch_steer1);
@@ -174,7 +297,7 @@ void loop() {
       //pulse_steer_in1 = pulse_steer(steer1);
       pulse_steer_in1 = pulse_steer(e);
       Serial.print(pulse_steer_in1);
-      client.publish("1pulse_spc",dtostrf(pulse_steer_in1, 5, 0, msgBuffer));
+      client.publish("spc_steer1",dtostrf(pulse_steer_in1, 5, 0, msgBuffer));
       }
       else {
         digitalWrite(led_steer1, LOW);
@@ -188,7 +311,7 @@ void loop() {
       //pulse_steer_in2 = pulse_steer(steer2);
       pulse_steer_in2 = pulse_steer(a);
       Serial.print(pulse_steer_in2);
-      client.publish("2pulse_spc",dtostrf(pulse_steer_in2, 5, 0, msgBuffer));
+      client.publish("spc_steer2",dtostrf(pulse_steer_in2, 5, 0, msgBuffer));
       }
       else {
         digitalWrite(led_steer2, LOW);
@@ -202,7 +325,7 @@ void loop() {
       //pulse_steer_in3 = pulse_steer(steer3);
       pulse_steer_in3 = pulse_steer(d);
       Serial.print(pulse_steer_in3);
-      client.publish("3pulse_spc",dtostrf(pulse_steer_in3, 5, 0, msgBuffer));
+      client.publish("spc_steer3",dtostrf(pulse_steer_in3, 5, 0, msgBuffer));
       }
       else {
         digitalWrite(led_steer3, LOW);
@@ -216,14 +339,14 @@ void loop() {
       //pulse_steer_in4 = pulse_steer(steer4);
       pulse_steer_in4 = pulse_steer(b);
       Serial.print(pulse_steer_in4);
-      client.publish("4pulse_spc",dtostrf(pulse_steer_in4, 5, 0, msgBuffer));
+      client.publish("spc_steer4",dtostrf(pulse_steer_in4, 5, 0, msgBuffer));
       }
       else {
         digitalWrite(led_steer4, LOW);
       }
   
     Serial.println();
-
+    
   }
   else {
     Serial.println("SMC off");
