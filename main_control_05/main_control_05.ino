@@ -1,6 +1,6 @@
 /* Draft Syergie Main Control 
 ----------------------------------------
-AI:
+NN:
 on   : publish from laptop
 off  : publish from main control
 ----------------------------------------
@@ -24,12 +24,12 @@ Steer Control:
 #include <PubSubClient.h>
 
 // Joystick
-#define joy_speed1 A0       //input joystick speed
+#define joy_speed1 A0       //input joystick speed (Y)
 #define joy_speed2 A1
 #define joy_speed3 A2
 #define joy_speed4 A3
 
-#define joy_steer1 A4       //input joystick steer
+#define joy_steer1 A4       //input joystick steer (X)
 #define joy_steer2 A5
 #define joy_steer3 A6
 #define joy_steer4 A7
@@ -41,7 +41,19 @@ int ai_active = 0;
 const int pixhawk = 23;
 double pulse_pixhawk;
 
+// Initialize state joystick
+int speed1 = 0;
+int speed2 = 0;
+int speed3 = 0;
+int speed4 = 0;
+
+int steer1 = 0;
+int steer2 = 0;
+int steer3 = 0;
+int steer4 = 0;
+
 // Pin switch
+const int switch_ai = 40;
 const int switch_main = 22; // input swicth main
 
 const int switch_speed1 = 26;  // input switch speed
@@ -54,8 +66,9 @@ const int switch_steer2 = 33;
 const int switch_steer3 = 34;
 const int switch_steer4 = 35;
 
-// Initialize state
-int state_main = 0;     //state main
+// Initialize state switch
+int state_ai = 0;       //state main
+int state_main = 0;       //state main
 
 int state_speed1 = 0;     //state speed
 int state_speed2 = 0;
@@ -68,7 +81,8 @@ int state_steer3 = 0;
 int state_steer4 = 0;
 
 // LED indikator
-//int led_main;     //output main
+//int led_ai;     //output ai
+//int led_main;   //output main
 
 int led_speed1;   //output speed
 int led_speed2;
@@ -87,6 +101,7 @@ const int led_main = 13;
 
 double pulse_speed_in;
 double pulse_steer_in;
+double ai_speed_in1;
 
 // Input pulse speed and steer
 const int a = 100;
@@ -97,8 +112,8 @@ const int e = 865;
 
 /* Declare IP Address */
 byte mac[]    = {  0xDA, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
-IPAddress ip(123, 205, 76, 90);       //IP for arduino
-IPAddress server(123, 205, 76, 65);   //IP for raspi/pc
+IPAddress ip(123, 45, 0, 9);        //IP for arduino
+IPAddress server(123, 45, 0, 10);   //IP for raspi/pc
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
@@ -166,7 +181,13 @@ void setup() {
   // Serial begin
   Serial.begin(57600);
 
+  // Ai 
+  ai_active = 0;                     
+
   // Switch
+  pinMode(switch_ai, INPUT);       //input switch main
+  digitalWrite(switch_ai, HIGH);
+  
   pinMode(switch_main, INPUT);       //input switch main
   digitalWrite(switch_main, HIGH);
   
@@ -189,6 +210,7 @@ void setup() {
   digitalWrite(switch_steer4, HIGH);
 
   pinMode(led_main, OUTPUT);
+  //pinMode(led_ai, OUTPUT);
 
     // Ethernet
   client.setServer(server, 1883);
@@ -203,41 +225,31 @@ void loop() {
   int pulse_steer_in1, pulse_steer_in2, pulse_steer_in3, pulse_steer_in4;
   char msgBuffer[20];
 
-  if (!client.connected()) {
-    reconnect();
+ if (!client.connected()) {
+   reconnect();
   }
 
+  /* Cek PC */
+  //client.subscribe("PC");
+  
   /*AI*/
-  if (ai_active == HIGH){
-    // digitalWrite(led_ai1, HIGH);
+  state_ai = digitalRead (switch_ai);
+  if (state_ai == LOW){
+    //LED indikator blink 
+    digitalWrite(led_main, HIGH);        // turn the LED on (HIGH is the voltage level)
+    delay(500);                       // wait for a second
+    digitalWrite(led_main, LOW);         // turn the LED off by making the voltage LOW
+    delay(500);                       // wait for a second
     // switch on, indicator on:
-    Serial.println(" AI:on ");
-    // subscribe dari laptop speed1-4, steer1-4
-    // save hasil subscribe
-    // publish ke main control
-    client.subscribe("ai_speed1");
-    client.subscribe("ai_speed2");
-    client.subscribe("ai_speed3");
-    client.subscribe("ai_speed4");
-
-    client.subscribe("ai_steer1");
-    client.subscribe("ai_steer2");
-    client.subscribe("ai_steer3");
-    client.subscribe("ai_steer4");    
-    
-    Serial.print(ai);
-    
-    client.publish("spc_ai_speed1",dtostrf(ai_speed_in1, 5, 0, msgBuffer));
-    client.publish("spc_ai_speed2",dtostrf(ai_speed_in2, 5, 0, msgBuffer));
-    client.publish("spc_ai_speed3",dtostrf(ai_speed_in3, 5, 0, msgBuffer));
-    client.publish("spc_ai_speed4",dtostrf(ai_speed_in4, 5, 0, msgBuffer));
-
-    client.publish("spc_ai_steer1",dtostrf(ai_steer_in1, 5, 0, msgBuffer));
-    client.publish("spc_ai_steer2",dtostrf(ai_steer_in2, 5, 0, msgBuffer));
-    client.publish("spc_ai_steer3",dtostrf(ai_steer_in3, 5, 0, msgBuffer));
-    client.publish("spc_ai_steer4",dtostrf(ai_steer_in4, 5, 0, msgBuffer));
+    // client.subscribe("switch_nn");
+    client.publish("switch_nn", "NN_on");
+    Serial.println(" ");
+    Serial.println(" NN_on");
   }
   else{
+    client.publish("switch_nn", "NN_off");
+    Serial.println(" ");
+    Serial.println(" NN_off");
     
   /* Main Control */
   state_main = digitalRead (switch_main);
@@ -246,9 +258,9 @@ void loop() {
     digitalWrite(led_main, HIGH);
     
     // main switch on, indicator on:
-    Serial.println("SMC on");
+    Serial.println(" SMC on");
 
-    /*Speed Control*/
+     /*Speed Control*/
     int state_speed1 = digitalRead(switch_speed1);
     int state_speed2 = digitalRead(switch_speed2);
     int state_speed3 = digitalRead(switch_speed3);
@@ -261,11 +273,12 @@ void loop() {
 
     if (state_speed1 == LOW) {
       digitalWrite(led_speed1, HIGH);
-      // int speed1 = analogRead(joy_speed1);
+      speed1 = analogRead(joy_speed1);
+      delay(100);
       // switch on, indicator on:
       Serial.print(" Speed1: ");
-      //pulse_speed_in1 = pulse_speed(speed1);
-      pulse_speed_in1 = pulse_speed(e);
+      pulse_speed_in1 = pulse_speed(speed1);
+      //pulse_speed_in1 = pulse_speed(e);
       Serial.print(pulse_speed_in1);
       client.publish("spc_speed1",dtostrf(pulse_speed_in1, 5, 0, msgBuffer));
       }
@@ -275,11 +288,12 @@ void loop() {
 
     if (state_speed2 == LOW) {
       digitalWrite(led_speed2, HIGH);
-      // int speed2 = analogRead(joy_speed2);
+      speed2 = analogRead(joy_speed2);
+      delay(100);
       // switch on, indicator on:
       Serial.print(" Speed2: ");
-      //pulse_speed_in2 = pulse_speed(speed2);
-      pulse_speed_in2 = pulse_speed(a);
+      pulse_speed_in2 = pulse_speed(speed2);
+      //pulse_speed_in2 = pulse_speed(a);
       Serial.print(pulse_speed_in2);
       client.publish("spc_speed2",dtostrf(pulse_speed_in2, 5, 0, msgBuffer));
       }
@@ -289,11 +303,12 @@ void loop() {
 
     if (state_speed3 == LOW) {
       digitalWrite(led_speed3, HIGH);
-      // int speed3 = analogRead(joy_speed3);
+      speed3 = analogRead(joy_speed3);
+      delay(100);
       // switch on, indicator on:
       Serial.print(" Speed3: ");
-      //pulse_speed_in3 = pulse_speed(speed3);
-      pulse_speed_in3 = pulse_speed(d);
+      pulse_speed_in3 = pulse_speed(speed3);
+      //pulse_speed_in3 = pulse_speed(d);
       Serial.print(pulse_speed_in3);
       client.publish("spc_speed3",dtostrf(pulse_speed_in3, 5, 0, msgBuffer));
       }
@@ -303,11 +318,12 @@ void loop() {
 
     if (state_speed4 == LOW) {
       digitalWrite(led_speed4, HIGH);
-      // int speed4 = analogRead(joy_speed4);
+      speed4 = analogRead(joy_speed4);
+      delay(100);
       // switch on, indicator on:
       Serial.print(" Speed4: ");
-      //pulse_speed_in4 = pulse_speed(speed4);
-      pulse_speed_in4 = pulse_speed(b);
+      pulse_speed_in4 = pulse_speed(speed4);
+      //pulse_speed_in4 = pulse_speed(b);
       Serial.print(pulse_speed_in4);
       client.publish("spc_speed4",dtostrf(pulse_speed_in4, 5, 0, msgBuffer));
       }
@@ -330,11 +346,12 @@ void loop() {
 
     if (state_steer1 == LOW) {
       digitalWrite(led_steer1, HIGH);
-      // int steer1 = analogRead(joy_steer1);
+      steer1 = analogRead(joy_steer1);
+      delay(100);
       // switch on, indicator on:
       Serial.print(" Steer1: ");
-      //pulse_steer_in1 = pulse_steer(steer1);
-      pulse_steer_in1 = pulse_steer(e);
+      pulse_steer_in1 = pulse_steer(steer1);
+      //pulse_steer_in1 = pulse_steer(e);
       Serial.print(pulse_steer_in1);
       client.publish("spc_steer1",dtostrf(pulse_steer_in1, 5, 0, msgBuffer));
       }
@@ -344,11 +361,11 @@ void loop() {
 
     if (state_steer2 == LOW) {
       digitalWrite(led_steer2, HIGH);
-      // int steer2 = analogRead(joy_steer2);
+      steer2 = analogRead(joy_steer2);
       // switch on, indicator on:
       Serial.print(" Steer2: ");
-      //pulse_steer_in2 = pulse_steer(steer2);
-      pulse_steer_in2 = pulse_steer(a);
+      pulse_steer_in2 = pulse_steer(steer2);
+      //pulse_steer_in2 = pulse_steer(a);
       Serial.print(pulse_steer_in2);
       client.publish("spc_steer2",dtostrf(pulse_steer_in2, 5, 0, msgBuffer));
       }
@@ -358,11 +375,11 @@ void loop() {
 
     if (state_steer3 == LOW) {
       digitalWrite(led_steer3, HIGH);
-      // int steer3 = analogRead(joy_steer3);
+      steer3 = analogRead(joy_steer3);
       // switch on, indicator on:
       Serial.print(" Steer3: ");
-      //pulse_steer_in3 = pulse_steer(steer3);
-      pulse_steer_in3 = pulse_steer(d);
+      pulse_steer_in3 = pulse_steer(steer3);
+      //pulse_steer_in3 = pulse_steer(d);
       Serial.print(pulse_steer_in3);
       client.publish("spc_steer3",dtostrf(pulse_steer_in3, 5, 0, msgBuffer));
       }
@@ -372,11 +389,11 @@ void loop() {
 
     if (state_steer4 == LOW) {
       digitalWrite(led_steer4, HIGH);
-      // int steer4 = analogRead(joy_steer4);
+      steer4 = analogRead(joy_steer4);
       // switch on, indicator on:
       Serial.print(" Steer4: ");
-      //pulse_steer_in4 = pulse_steer(steer4);
-      pulse_steer_in4 = pulse_steer(b);
+      pulse_steer_in4 = pulse_steer(steer4);
+      //pulse_steer_in4 = pulse_steer(b);
       Serial.print(pulse_steer_in4);
       client.publish("spc_steer4",dtostrf(pulse_steer_in4, 5, 0, msgBuffer));
       }
@@ -388,9 +405,11 @@ void loop() {
     
   }
   else {
-    Serial.println("SMC off");
-    pulse_pixhawk = pulseIn(pixhawk, HIGH);
     digitalWrite(led_main, LOW);
+    Serial.println(" SMC: off");
+    pulse_pixhawk = pulseIn(pixhawk, HIGH);
+    Serial.println(pulse_pixhawk);
+    client.publish("spc_pixhawk",dtostrf(pulse_pixhawk, 5, 0, msgBuffer));
   }
       
   client.loop();
