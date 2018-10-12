@@ -242,14 +242,14 @@ void loop() {
     // client.subscribe("switch_nn");
     client.publish("switch_nn", "NN_on");
     Serial.println(" ");
-    Serial.println(" NN_on");
+    Serial.println(" NN:on");
   }
   else{
     client.publish("switch_nn", "NN_off");
     Serial.println(" ");
-    Serial.println(" NN_off");
+    Serial.println(" NN:off");
     
-  /* Main Control */
+  /* Main Control*/
   state_main = digitalRead (switch_main);
 
   if (state_main == LOW) {                        
