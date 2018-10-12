@@ -4,6 +4,9 @@ NN:
 on   : publish from laptop
 off  : publish from main control
 ----------------------------------------
+PC: (cek PC)
+terima input pc terus menerus
+----------------------------------------
 Main Control:
 on   : input from joystick
 off  : manual input from Pixhawk
@@ -81,7 +84,7 @@ int state_steer3 = 0;
 int state_steer4 = 0;
 
 // LED indikator
-//int led_ai;     //output ai
+//int led_nn;     //output ai
 //int led_main;   //output main
 
 int led_speed1;   //output speed
@@ -101,7 +104,7 @@ const int led_main = 13;
 
 double pulse_speed_in;
 double pulse_steer_in;
-double nn_speed_in1;
+double ai_speed_in1;
 
 // Input pulse speed and steer
 const int a = 100;
@@ -181,11 +184,11 @@ void setup() {
   // Serial begin
   Serial.begin(57600);
 
-  // Ai 
+  // NN 
   nn_active = 0;                     
 
   // Switch
-  pinMode(switch_nn, INPUT);       //input switch main
+  pinMode(switch_nn, INPUT);         //input switch main
   digitalWrite(switch_nn, HIGH);
   
   pinMode(switch_main, INPUT);       //input switch main
@@ -212,7 +215,7 @@ void setup() {
   pinMode(led_main, OUTPUT);
   //pinMode(led_nn, OUTPUT);
 
-  // Ethernet
+    // Ethernet
   client.setServer(server, 1883);
   Ethernet.begin(mac, ip);
   client.setCallback(callback);  
@@ -229,15 +232,26 @@ void loop() {
    reconnect();
   }
 */
- 
+
+///////////////////////////////////////////
+  /* Cek PC */
+  //cek PC on atau off. kalo on ada subcribe topik PC
+    client.subscribe("PC");
+    // if subscribe pc ada data
+    state_pc = 1;
+    client.publish("spc_speed1","PC_active"));
+    Serial.println("spc_speed1","PC_active")
+  }
+  /////////////////////////////////////////
+  
   /*NN*/
   state_nn = digitalRead (switch_nn);
   if (state_nn == LOW){
     //LED indikator blink 
-    digitalWrite(led_main, HIGH);     // turn the LED on (HIGH is the voltage level)
-    delay(500);                       // wait for a second
-    digitalWrite(led_main, LOW);      // turn the LED off by making the voltage LOW
-    delay(500);                       // wait for a second
+    digitalWrite(led_main, HIGH);     
+    delay(500);                       
+    digitalWrite(led_main, LOW);      
+    delay(500);                       
     // switch on, indicator on:
     // client.subscribe("switch_nn");
     client.publish("switch_nn", "NN_on");
@@ -248,8 +262,18 @@ void loop() {
     client.publish("switch_nn", "NN_off");
     Serial.println(" ");
     Serial.println(" NN_off");
-    
+  }
+
+   
   /* Main Control */
+  // main switch on kalo state_pc = 0 atau state_nn = 0
+  if (state_pc == LOW &&  state_nn == LOW){
+    digitalWrite(led_main, HIGH);     
+    delay(100);                       
+    digitalWrite(led_main, LOW);      
+    delay(100);                       
+  }
+  
   state_main = digitalRead (switch_main);
 
   if (state_main == LOW) {                        
