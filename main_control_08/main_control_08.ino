@@ -1,4 +1,5 @@
 /* Draft Syergie Main Control 
+ * 17/10/2018
 ----------------------------------------
 NN:
 on   : publish from laptop
@@ -28,28 +29,37 @@ Tunning:
 ----------------------------------------
 */
 
+/* Library math */
+#include <math.h>
+
 /* Library ethernet */
 #include <SPI.h>
 #include <Ethernet.h>
 #include <PubSubClient.h>
 
+
 // Joystick 
 #define joy_speed_left A8       //input main speed-left (front and back)
 #define joy_speed_right A9      //input main speed-right (front and back)
+#define joy_steer_leftx A6       
+#define joy_steer_lefty A7       
+#define joy_steer_rightx A0      
+#define joy_steer_righty A1      
+#define joy_tunning1 A5         
+#define joy_tunning2 A4         
+#define joy_tunning3 A3         
+#define joy_tunning4 A2         
 
-#define joy_steer_leftx A6       //input main steer-left (front and back)
-#define joy_steer_lefty A7       //input main steer-left (front and back)
-#define joy_steer_rightx A0      //input main steer-right (front and back)
-#define joy_steer_righty A1      //input main steer-right (front and back)
-
-#define joy_tunning1 A5         //tunning kp
-#define joy_tunning2 A4         //tunning ki
-#define joy_tunning3 A3         //tunning kd
-#define joy_tunning4 A2         //tunning kd
-
-// Pixhawk
-const int pixhawk = 23;
-double pulse_pixhawk;
+// Pixhawk ,edited 16/10/2018 , Teguh
+const int pixhawk_1 = 23;
+const int pixhawk_2 = 24;
+const int pixhawk_3 = 25;
+const int pixhawk_4 = 26;
+double pulse_pixhawk_1;
+double pulse_pixhawk_2;
+double pulse_pixhawk_3;
+double pulse_pixhawk_4;
+double azimuth;
 
 // Initialize state joystick
 int speed_left = 0;             
@@ -70,13 +80,10 @@ int tunning4 = 0;
 const int switch_nn = 22;
 const int switch_manual = 23;           // input swicth main
 const int switch_tunning = 24;          // input swicth main
-
 const int switch_speed_left = 28;  
 const int switch_speed_right = 29; 
- 
 const int switch_steer_left = 30;  
 const int switch_steer_right = 31;  
-
 const int switch_steer1 = 36;           //tunning steer 1
 const int switch_steer2 = 37;           //tunning steer 2
 const int switch_steer3 = 38;           //tunning steer 3
@@ -86,13 +93,10 @@ const int switch_steer4 = 39;           //tunning steer 4
 int state_nn = 0;                      //state nn
 int state_manual = 0;                  //state manual
 int state_tunning = 0;                 //state tunning
-
 int state_steer_left = 0;              //front left
 int state_steer_right = 0;             //back left
-
 int state_speed_left = 0;              //front left
 int state_speed_right = 0;             //back left
-
 int state_steer1 = 0;                  //state steer
 int state_steer2 = 0;
 int state_steer3 = 0;
@@ -114,16 +118,7 @@ const int led_main;                //output manual or pixhawk
 const int led_tunning;             //output tunning
 
 //Pulse
-double pulse_speed_in;
-double pulse_steer_in;
 double nn_speed_in;
-
-// Input pulse for testing
-const int a = 100;
-const int b = 300;
-const int c = 500;
-const int d = 650;
-const int e = 865;
 
 
 /* Declare IP Address */
@@ -163,8 +158,10 @@ void reconnect() {
   }
 }
 
-// Speed Function
+/* Speed Function */
 double pulse_speed(int joyspeed) {
+  double pulse_speed_in;
+  
   if (joyspeed <=200){
     pulse_speed_in = 1500;
    }
@@ -183,23 +180,62 @@ double pulse_speed(int joyspeed) {
   return pulse_speed_in;
 }
 
-//Steer Function
-double pulse_steer (int joysteer) {
-  const int normal = 500; 
-  if (joysteer <= normal){
-    pulse_steer_in = map(joysteer, 0, 500, 1100, 1500);
-    }
-  else {
-    pulse_steer_in = map(joysteer, 501, 1023, 1501, 1900);
+/* Steer Function */
+double pulse_steer(int x, int y) {
+  double pulse_steer_in;
+  if (x <= 400){
+      if (y <= 350){
+           pulse_steer_in = 1200;
+           //derajat = 225; 
+      }
+      else if (y <= 800){
+           pulse_steer_in = 1300;
+          //derajat = 270;
+      }
+      else if (y > 800){
+           pulse_steer_in = 1400;
+          //derajat = 315;
+      }
+      else{
+          pulse_steer_in = 111;
+      }
   }
-  return pulse_steer_in;
+  else if (x <= 800){
+      if (y > 1000){
+           pulse_steer_in = 1500;
+           //derajat = 0; 
+      }
+      else{
+          pulse_steer_in = 0;
+      }
+  }
+  else  if (x > 800){
+      if (y <= 350){
+           pulse_steer_in = 1800;
+          //derajat = 45;
+      }
+      else if (y <= 800){
+           pulse_steer_in = 1700;
+          //derajat = 90;
+      }
+      else if (y > 800){
+           pulse_steer_in = 1600;
+           //derajat = 135; 
+      }  
+      else{
+          pulse_steer_in = 777;
+      }
+  }
+  else {
+       pulse_steer_in = 999;
+  }
+  return pulse_steer_in; 
 }
 
-//Tunning Function (KP and KD)
+/* Tunning Function (KP and KD) */
 double pulse_tunning_pd(int joytune_1, double tunning_1) {
   if (joytune_1 <=100){
     tunning_1 += 0.1;
-
    }
   else if (joytune_1 >=900){
     tunning_1 -= 0.1;
@@ -207,11 +243,10 @@ double pulse_tunning_pd(int joytune_1, double tunning_1) {
   return tunning_1;
 }
 
-//Tunning Function (KI)
-double pulse_tunning_i(int joytune_2, float tunning_2) {
+/*Tunning Function (KI)*/
+double pulse_tunning_i(int joytune_2, double tunning_2) {
   if (joytune_2 <=100){
     tunning_2 += 0.1;
-    
    }
   else if (joytune_2 >=900){
     tunning_2 -= 0.1;
@@ -265,8 +300,8 @@ void loop() {
   int pulse_speed_in_left, pulse_speed_in_right;
   int pulse_steer_in_left, pulse_steer_in_right;
   int pulse_tunning1, pulse_tunning2;
-  double kp1,kd1, kp2, kd2,kp3,kd3,kp4,kd4;
-  float ki1, ki2, ki3,ki4;
+ // double kp1,kd1, kp2, kd2,kp3,kd3,kp4,kd4
+  //float ki1, ki2, ki3,ki4;
 
 /* if (!client.connected()) {
    reconnect();
@@ -293,87 +328,79 @@ void loop() {
     Serial.println(" NN:off");
   }
 
-  /* Manual */
+  /* Main */
+ // bisa jalan kalo gaada input dari pc dan switch nn off
+ // input smc dari joystick
  state_manual = digitalRead (switch_manual);
 
+  //Switch Main : on
   if (state_manual == LOW) {                        
     // manual switch on, indicator on:
     digitalWrite(led_main, HIGH);
     Serial.println(" manual on");
 
-
     /*Speed Control*/
     int state_speed_left = digitalRead(switch_speed_left);
     int state_speed_right = digitalRead(switch_speed_right);
-  
     Serial.print(state_speed_left);
-    Serial.print(state_speed_right);
-    
+    Serial.print(state_speed_right); 
     //Speed Control Left
     if (state_speed_left == LOW) {
-    speed_left = analogRead(joy_speed_left);
-    delay(100);
-    Serial.print(" Speed left: ");
-    pulse_speed_in_left = pulse_speed(speed_left);
-    //pulse_speed_in_left = pulse_speed(e);
-    Serial.print(pulse_speed_in_left);
-    client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
+      speed_left = analogRead(joy_speed_left);
+      delay(100);
+      Serial.print(" Speed left: ");
+      pulse_speed_in_left = pulse_speed(speed_left);
+      Serial.print(pulse_speed_in_left);
+      client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
     }
-
     //Speed Control Right
     if (state_speed_right == LOW) {
-    speed_right = analogRead(joy_speed_right);
-    delay(100);
-    Serial.print(" Speed right: ");
-    pulse_speed_in_right = pulse_speed(speed_right);
-    //pulse_speed_in_right = pulse_speed(e);
-    Serial.println(pulse_speed_in_right);
-    client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
+      speed_right = analogRead(joy_speed_right);
+      delay(100);
+      Serial.print(" Speed right: ");
+      pulse_speed_in_right = pulse_speed(speed_right);
+      Serial.println(pulse_speed_in_right);
+      client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
     }
 
-    /*Steer Control (Main)*/
+    /*Steer Control (Main) */
     int state_steer_left = digitalRead(switch_steer_left);
     int state_steer_right = digitalRead(switch_steer_right);
-  
     Serial.print(state_steer_left);
     Serial.print(state_steer_right);
-    
-    //Steer Left
+    //Steer Control Left
     if (state_steer_left == LOW) {
-    steer_left = analogRead(joy_steer_left);
-    delay(100);
-    Serial.print(" Steer left: ");
-    pulse_steer_in_left = pulse_steer(steer_left);
-    //pulse_steer_in_left = pulse_steer(e);
-    Serial.println(pulse_steer_in_left);
-    client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
+      steer_left = analogRead(joy_steer_left);
+      delay(100);
+      Serial.print(" Steer left: ");
+      pulse_steer_in_left = pulse_steer(steer_left);
+      Serial.println(pulse_steer_in_left);
+      client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
     }
-    
-    //Steer Right
+    //Steer Control Right
     if (state_steer_right == LOW) {
-    steer_right = analogRead(joy_steer_right);
-    delay(100);
-    Serial.print(" Steer right: ");
-    pulse_steer_in_right = pulse_steer(steer_right);
-    //pulse_steer_in_right = pulse_steer(e);
-    Serial.println(pulse_steer_in_right);
-    client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+      steer_right = analogRead(joy_steer_right);
+      delay(100);
+      Serial.print(" Steer right: ");
+      pulse_steer_in_right = pulse_steer(steer_right);
+      Serial.println(pulse_steer_in_right);
+      client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
     }
 
-    //Tunning
-    int state_tunning = digitalRead(switch_tunning); // input swicth main
-    if (state_tunning == LOW) {
+ /*   //Tunning
+//    int state_tunning = digitalRead(switch_tunning); // input swicth main
+//    if (state_tunning == LOW) {
       Serial.println("Tunning on");
                   
-      int state_steer1 = digitalRead(switch_steer1);
-      int state_steer2 = digitalRead(switch_steer2);
-      int state_steer3 = digitalRead(switch_steer3);
-      int state_steer4 = digitalRead(switch_steer4);
+//      int state_steer1 = digitalRead(switch_steer1);
+//      int state_steer2 = digitalRead(switch_steer2);
+//      int state_steer3 = digitalRead(switch_steer3);
+//      int state_steer4 = digitalRead(switch_steer4);
   
-      Serial.print(state_steer1);
-      Serial.print(state_steer2);
-      Serial.print(state_steer3);
-      Serial.print(state_steer4);
+//      Serial.print(state_steer1);
+//      Serial.print(state_steer2);
+//      Serial.print(state_steer3);
+//      Serial.print(state_steer4);
 
       // switch tunning 1 on
       if (state_steer1 == LOW && state_steer2 == HIGH && state_steer2 == HIGH && state_steer2 == HIGH) {
@@ -395,9 +422,9 @@ void loop() {
         client.publish("steer1_kp",dtostrf(kp1, 5, 0, msgBuffer));
         client.publish("steer1_ki",dtostrf(ki1, 5, 0, msgBuffer));
         client.publish("steer1_kd",dtostrf(kd1, 5, 0, msgBuffer));
-        } 
+//        } 
 
-      // switch tunning 2 on
+  /*    // switch tunning 2 on
       if (state_steer1 == HIGH && state_steer2 == LOW && state_steer3 == HIGH && state_steer4 == HIGH) {
         tunning1 = analogRead(joy_tunning1);
         tunning2 = analogRead(joy_tunning2);
@@ -460,19 +487,76 @@ void loop() {
       client.publish("steer3_ki",dtostrf(ki4, 5, 0, msgBuffer));
       client.publish("steer3_kd",dtostrf(kd4, 5, 0, msgBuffer));
       }
+*/
 
     Serial.println();
     }
-  }
+
+  //Switch Main : off
+  // input smc dari pixhawk 
   else {
     digitalWrite(led_main, LOW);
     Serial.println(" SMC: off");
-    pulse_pixhawk = pulseIn(pixhawk, HIGH);
-    pulse_pixhawk = pulseIn(pixhawk, HIGH);
-    pulse_pixhawk = pulseIn(pixhawk, HIGH);
-    pulse_pixhawk = pulseIn(pixhawk, HIGH);
-    Serial.println(pulse_pixhawk);
-    client.publish("spc_pixhawk",dtostrf(pulse_pixhawk, 5, 0, msgBuffer));
+
+    // Pixhawk process , Teguh, 16/10/2018
+    pulse_pixhawk_1 = pulseIn(pixhawk_1, HIGH);
+    pulse_pixhawk_2 = pulseIn(pixhawk_2, HIGH);
+    pulse_pixhawk_3 = pulseIn(pixhawk_3, HIGH);
+    pulse_pixhawk_4 = pulseIn(pixhawk_4, HIGH);
+    //Yaw Left
+    if ((pulse_pixhawk_4 > pulse_pixhawk_1 ) && (pulse_pixhawk_3 > pulse_pixhawk_2)){
+       pulse_speed_in_right = 1800;
+       pulse_speed_in_left = 1100;
+       pulse_steer_in_right = 1500;
+       pulse_steer_in_left = 1500;
+       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
+       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
+       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
+       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+    }
+    //Yaw Right
+    else if ((pulse_pixhawk_4 > pulse_pixhawk_1 ) && (pulse_pixhawk_3 > pulse_pixhawk_2)){
+       pulse_speed_in_right = 1100;
+       pulse_speed_in_left = 1800;
+       pulse_steer_in_right = 1500;
+       pulse_steer_in_left = 1500;
+       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
+       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
+       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
+       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+    }
+    //Another
+    else {
+       if ((pulse_pixhawk_4 == pulse_pixhawk_3)&&(pulse_pixhawk_3 == pulse_pixhawk_2) && (pulse_pixhawk_2 == pulse_pixhawk_1)){
+        pulse_speed_in_right = 1500;
+       pulse_speed_in_left = 1500;
+       pulse_steer_in_right = 1500;
+       pulse_steer_in_left = 1500;
+       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
+       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
+       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
+       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+       }
+       else{ 
+       pulse_speed_in_right = 1700;
+       pulse_speed_in_left = 1700;
+       azimuth = atan2 (pulse_pixhawk_4 - pulse_pixhawk_1, pulse_pixhawk_2 - pulse_pixhawk_3) ;
+       if ((azimuth >= 0) && (azimuth <= 3.14)){
+       pulse_steer_in_right = map(azimuth, 0, 3.14, 1100, 1500);
+       pulse_steer_in_left = pulse_steer_in_right;
+       }
+       else if ((azimuth > 3.14) && (azimuth <= 6.28)){
+       pulse_steer_in_right = map(azimuth, 3.15, 6.28, 1500, 1900);
+       pulse_steer_in_left = pulse_steer_in_right;
+       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
+       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
+       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
+       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+       }
+       
+       }
+    }
+    //Serial.println(pulse_pixhawk);
   }
       
   client.loop();

@@ -43,3 +43,14 @@ Kontrol dengan tiga opsi yaitu NN, Pixhawk, Manual (joystick).
 Manual control pake 2 speed control sama 2 steer control. kanan untuk propeller depan dan belakang kanan. kiri untuk propeller depan dan belakang kiri.
 PID dapat ditunning per propeller.
 
+
+SMC_update_teguh161018:
+tambah bagian pixhawk sama delay diubah ke 1 detik
+edit dari main_control_07 
+
+test_joystick:
+buat tes bacaan potensio di joystick
+
+
+
+
