@@ -1,20 +1,14 @@
-//Test_Joystick
-//17/10/2018
+//Test_steer_function
+//18/10/2018
 
-
-/* Library ethernet */
-#include <SPI.h>
-#include <Ethernet.h>
-#include <PubSubClient.h>
-
-#define joy0 A0         
-#define joy1 A1         
+#define joy0 A0         //steer kanan x
+#define joy1 A1         //steer kanan y
 #define joy2 A2         
 #define joy3 A3         
 #define joy4 A4         
 #define joy5 A5
-#define joy6 A6         
-#define joy7 A7
+#define joy6 A6         //steer kiri x
+#define joy7 A7         //steer kiri y
 
 int potensio0 = 0;
 int potensio1 = 0;
@@ -26,59 +20,8 @@ int potensio6 = 0;
 int potensio7 = 0;
 
 double pulse_steer_in;
-/*
-//Steer Function
-double pulse_steer (int joysteerx, joysteery) {
-  const int normal = 500; 
-  if (joysteer <= normal){
-    pulse_steer_in = map(joysteer, 0, 500, 1100, 1500);
-    }
-  else {
-    pulse_steer_in = map(joysteer, 501, 1023, 1501, 1900);
-  }
-  return pulse_steer_in;
-}*/
 
-/*
-// Speed Function
-double pulse_steer(int joysteerx, int joysteery) {
 
-  double pulse_steer_in;
-  
-  if ((joysteerx <= 350) && (joysteery <= 400)){
-    pulse_steer_in = 1200;
-//    derajat = 225;
-   }
-  else if ((joysteerx <= 350) && (joysteery <= 660)){
-    pulse_steer_in = 1300;
-//    derajat = 270;
-   }
-  else if ((joysteerx <= 350) && (joysteery <= 920)){
-    pulse_steer_in = 1400;
-//    derajat = 315;
-   }
-  else if ((joysteerx <= 660) && (joysteerx =1023)){
-    pulse_steer_in = 1500;
-//    derajat = 0;
-   }
-    else if ((joysteerx > 660) && (joysteery <= 400)){
-    pulse_steer_in = 1800; 
-//    derajat = 135;
-    }
-    else if ((joysteerx > 660) && (joysteery <= 660)){
-    pulse_steer_in = 1700; 
-  //  derajat = 90;
-   }
-  else if ((joysteerx > 660) && (joysteery <= 920)){
-    pulse_steer_in = 1600; 
-    //derajat = 45;
-   }
-   else{
-    pulse_steer_in = 999; 
-   }
-  return pulse_steer_in; 
-}
-*/
 // Steer Function
 double pulse_steer(int x, int y) {
   double pulse_steer_in;
@@ -122,11 +65,11 @@ double pulse_steer(int x, int y) {
            //derajat = 135; 
       }  
       else{
-          pulse_steer_in = 777;
+          pulse_steer_in = 77;
       }
   }
   else {
-       pulse_steer_in = 999;
+       pulse_steer_in = 99;
   }
   return pulse_steer_in; 
 }

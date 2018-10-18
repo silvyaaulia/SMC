@@ -1,11 +1,6 @@
 //Test_Joystick
 
 
-/* Library ethernet */
-#include <SPI.h>
-#include <Ethernet.h>
-#include <PubSubClient.h>
-
 #define joy0 A0         
 #define joy1 A1         
 #define joy2 A2         

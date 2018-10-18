@@ -1,17 +1,17 @@
 //Test_switch 
-//17/10/18
+//18/10/18
 
 
 //Pin Switch
 const int switch_nn = 22;
-const int switch_manual = 23;           // input swicth main
-const int switch_tunning = 24;          // input swicth main
+const int switch_manual = 47;           // input swicth main
+const int switch_tunning = 49;          // input swicth main
 
-const int switch_speed_left = 28;  
-const int switch_speed_right = 29; 
+const int switch_speed_left = 51;  
+const int switch_speed_right = 28; 
  
-const int switch_steer_left = 30;  
-const int switch_steer_right = 31;  
+const int switch_steer_left = 53;  
+const int switch_steer_right = 30;  
 
 const int switch_steer1 = 36;           //tunning steer 1
 const int switch_steer2 = 37;           //tunning steer 2

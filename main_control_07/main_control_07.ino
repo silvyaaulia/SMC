@@ -1,4 +1,5 @@
 /* Draft Syergie Main Control 
+ *  18/10/2018
 ----------------------------------------
 NN:
 on   : publish from laptop
@@ -267,6 +268,7 @@ void loop() {
   int pulse_tunning1, pulse_tunning2;
   double kp1,kd1, kp2, kd2,kp3,kd3,kp4,kd4;
   float ki1, ki2, ki3,ki4;
+  char msgBuffer[20];
 
 /* if (!client.connected()) {
    reconnect();
