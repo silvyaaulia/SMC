@@ -1,5 +1,5 @@
 //Test tunning
-//18/10/18
+//21/10/18
 #define joy_tunning1 A5         
 #define joy_tunning2 A4         
 #define joy_tunning3 A3         
@@ -11,7 +11,7 @@ int tunning3 = 0;
 int tunning4 = 0;
       
 
-/* Tunning Function (KP and KD) */
+/* Tunning Function (KP) */
 double pulse_tunning_pd(int joytune_1) {
   double tunning_1;
   if (joytune_1 <=100){

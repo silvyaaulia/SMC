@@ -148,6 +148,7 @@ void reconnect() {
       // Once connected, publish an announcement...
       // ... and resubscribe
       client.subscribe("MainControl");
+      client.subscribe
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -251,10 +252,10 @@ double pulse_tunning_p(int joytune_1) {
 double pulse_tunning_i(int joytune_2) {
   double tunning_2;
   if (joytune_2 <=100){
-    tunning_2 = -0.1;
+    tunning_2 = -0.0001;
    }
   else if (joytune_2 >=900){
-    tunning_2 = 0.1;
+    tunning_2 = 0.0001;
    }
    else{
     tunning_2 = 0;
@@ -328,10 +329,10 @@ void loop() {
 
   
 
-/* if (!client.connected()) {
+ if (!client.connected()) {
    reconnect();
   }
-*/
+
 
  /*NN
   state_nn = digitalRead (switch_nn);
@@ -458,9 +459,9 @@ void loop() {
         Serial.print(ki1);
         Serial.print(" kd:");
         Serial.println(kd1);
-        client.publish("steer1_kp",dtostrf(kp1, 5, 0, msgBuffer));
-        client.publish("steer1_ki",dtostrf(ki1, 5, 0, msgBuffer));
-        client.publish("steer1_kd",dtostrf(kd1, 5, 0, msgBuffer));
+        client.publish("steer1_kp",dtostrf(kp1, 2, 2, msgBuffer));
+        client.publish("steer1_ki",dtostrf(ki1, 5, 4, msgBuffer));
+        client.publish("steer1_kd",dtostrf(kd1, 5, 2, msgBuffer));
         } 
 
       // switch tunning 2 on
@@ -475,9 +476,9 @@ void loop() {
         Serial.print(ki2);
         Serial.print(" kd:");
         Serial.println(kd2);
-        client.publish("steer2_kp",dtostrf(kp2, 5, 0, msgBuffer));
-        client.publish("steer2_ki",dtostrf(ki2, 5, 0, msgBuffer));
-        client.publish("steer2_kd",dtostrf(kd2, 5, 0, msgBuffer));
+        client.publish("steer1_kp",dtostrf(kp2, 2, 2, msgBuffer));
+        client.publish("steer1_ki",dtostrf(ki2, 5, 4, msgBuffer));
+        client.publish("steer1_kd",dtostrf(kd2, 5, 2, msgBuffer));
         }
 
      // switch tunning 3 on
@@ -492,9 +493,9 @@ void loop() {
        Serial.print(ki3);
        Serial.print(" kd:");
        Serial.println(kd3);
-       client.publish("steer3_kp",dtostrf(kp3, 5, 0, msgBuffer));
-       client.publish("steer3_ki",dtostrf(ki3, 5, 0, msgBuffer));
-       client.publish("steer3_kd",dtostrf(kd3, 5, 0, msgBuffer));
+       client.publish("steer1_kp",dtostrf(kp3, 2, 2, msgBuffer));
+       client.publish("steer1_ki",dtostrf(ki3, 5, 4, msgBuffer));
+       client.publish("steer1_kd",dtostrf(kd3, 5, 2, msgBuffer));
        }
  
     // switch tunning 4 on
@@ -509,9 +510,9 @@ void loop() {
       Serial.print(ki4);
       Serial.print(" kd:");
       Serial.println(kd4);
-      client.publish("steer4_kp",dtostrf(kp4, 5, 0, msgBuffer));
-      client.publish("steer4_ki",dtostrf(ki4, 5, 0, msgBuffer));
-      client.publish("steer4_kd",dtostrf(kd4, 5, 0, msgBuffer));
+      client.publish("steer1_kp",dtostrf(kp4, 2, 2, msgBuffer));
+      client.publish("steer1_ki",dtostrf(ki4, 5, 4, msgBuffer));
+      client.publish("steer1_kd",dtostrf(kd4, 5, 2, msgBuffer));
       }
 
 
@@ -589,4 +590,5 @@ void loop() {
   client.loop();
   delay(1000); 
 
+client.publish("tes","test");
   }
