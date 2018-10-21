@@ -71,9 +71,9 @@ const int switch_nn = 22;
 const int switch_manual = 7;           // input swicth main
 const int switch_tunning = 6;          // input swicth main
 const int switch_speed_left = 4;  
-const int switch_speed_right = 28; 
+const int switch_speed_right = 30; 
 const int switch_steer_left = 5;  
-const int switch_steer_right = 30;  
+const int switch_steer_right = 28;  
 const int switch_steer1 = 36;           //tunning steer 1
 const int switch_steer2 = 37;           //tunning steer 2
 const int switch_steer3 = 38;           //tunning steer 3
@@ -232,47 +232,35 @@ double pulse_steer(int x, int y) {
   return pulse_steer_in; 
 }
 
-/* Tunning Function (KP) */
-double pulse_tunning_p(int joytune_1) {
-  double tunning_1;
+/* Tunning Function (KP and KD) */
+double pulse_tunning_pd(int joytune_1, double tunning_1) {
   if (joytune_1 <=100){
-    tunning_1 = -0.1;
+    tunning_1 -= 0.1;
    }
   else if (joytune_1 >=900){
-    tunning_1 = 0.1;
-   }
-   else{
-    tunning_1 = 0;
+    tunning_1 += 0.1;
    }
   return tunning_1;
 }
 
 /*Tunning Function (KI)*/
-double pulse_tunning_i(int joytune_2) {
-  double tunning_2;
+double pulse_tunning_i(int joytune_2, double tunning_2) {
   if (joytune_2 <=100){
-    tunning_2 = -0.1;
+    tunning_2 -= 0.1;
    }
   else if (joytune_2 >=900){
-    tunning_2 = 0.1;
-   }
-   else{
-    tunning_2 = 0;
+    tunning_2 += 0.1;
    }
   return tunning_2;
 }
 
 /* Tunning Function (KD) */
-double pulse_tunning_d(int joytune_3) {
-  double tunning_3;
+double pulse_tunning_d(int joytune_3, double tunning_3) {
   if (joytune_3 <=100){
-    tunning_3 = -0.1;
+    tunning_3 -= 0.1;
    }
   else if (joytune_3 >=900){
-    tunning_3 = 0.1;
-   }
-  else{
-    tunning_3 = 0;
+    tunning_3 += 0.1;
    }
   return tunning_3;
 }
@@ -281,7 +269,7 @@ void setup() {
   // Serial begin
   Serial.begin(57600);
 
-  // Switch
+  // Switch, edited
   pinMode(switch_manual ,INPUT);                  //switch UTAMA
   analogWrite(switch_manual ,255);
   pinMode(switch_tunning ,INPUT);
@@ -325,7 +313,7 @@ void loop() {
   int pulse_steer_in_left, pulse_steer_in_right;
   int pulse_tunning1, pulse_tunning2;
   double kp1, kd1, kp2, kd2,kp3, kd3, kp4, kd4, ki1, ki2, ki3,ki4, xx;
-
+  
   
 
 /* if (!client.connected()) {
@@ -333,8 +321,8 @@ void loop() {
   }
 */
 
- /*NN
-  state_nn = digitalRead (switch_nn);
+ /*NN*/
+  state_nn = (digitalRead (switch_nn));
   if (state_nn == LOW){
     //LED indikator blink 
     digitalWrite(led_main, HIGH);     // turn the LED on (HIGH is the voltage level)
@@ -352,30 +340,28 @@ void loop() {
     Serial.println(" ");
     Serial.println(" NN:off");
   }
-  */
 
   /* Main */
  // bisa jalan kalo gaada input dari pc dan switch nn off
  // input smc dari joystick
- state_manual = digitalRead (switch_manual);
+ state_manual = not(digitalRead (switch_manual));
 
   //Switch Main : on
   if (state_manual == LOW) {                        
     // manual switch on, indicator on:
     digitalWrite(led_main, HIGH);
-    Serial.println();
-    Serial.println("Manual Mode");
+    Serial.println(" manual on");
 
     
     /*Speed Control (main)*/
-    state_speed_left = digitalRead(switch_speed_left);          //edited
-    state_speed_right = digitalRead(switch_speed_right);        //edited
-    //Serial.print(state_speed_left);
-    //Serial.print(state_speed_right); 
+    int state_speed_left = not(digitalRead(switch_speed_left));
+    int state_speed_right = not(digitalRead(switch_speed_right));
+    Serial.print(state_speed_left);
+    Serial.print(state_speed_right); 
     //Speed Control Left
     if (state_speed_left == LOW) {
-      //speed_left = analogRead(joy_speed_left);
-      speed_left = analogRead(joy_tunning1);      //testing
+      speed_left = analogRead(joy_speed_left);
+      //speed_left = analogRead(joy_tunning1);      //testing
       delay(100);
       Serial.print(" Speed left: ");
       pulse_speed_in_left = pulse_speed(speed_left);
@@ -384,8 +370,8 @@ void loop() {
     }
     //Speed Control Right
     if (state_speed_right == LOW) {
-      //speed_right = analogRead(joy_speed_right);
-      speed_right = analogRead(joy_tunning3);      //testing
+      speed_right = analogRead(joy_speed_right);
+      //speedright = analogRead(joy_tunning3);      //testing
       delay(100);
       Serial.print(" Speed right: ");
       pulse_speed_in_right = pulse_speed(speed_right);
@@ -395,10 +381,10 @@ void loop() {
 
 
     /*Steer Control (Main) */
-    state_steer_left = digitalRead(switch_steer_left);        
-    state_steer_right = digitalRead(switch_steer_right);      
-    //Serial.print(state_steer_left);
-    //Serial.println(state_steer_right);
+    int state_steer_left = not(digitalRead(switch_steer_left));
+    int state_steer_right = not(digitalRead(switch_steer_right));
+    Serial.print(state_steer_left);
+    Serial.print(state_steer_right);
 
     //Steer Control Left
     if (state_steer_left == LOW) {
@@ -407,7 +393,7 @@ void loop() {
       delay(100);
       Serial.print(" Steer left: ");
       pulse_steer_in_left = pulse_steer(steer_leftx, steer_lefty);
-      Serial.print(pulse_steer_in_left);
+      Serial.println(pulse_steer_in_left);
       if (pulse_steer_in_left > 1000 ) {
         client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
       }
@@ -424,38 +410,40 @@ void loop() {
         client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
       }
     }
- 
- 
-//Tunning
+
+    //Tunning
     int state_tunning = digitalRead(switch_tunning); // input swicth main
     if (state_tunning == LOW) {
-      Serial.print("Tunning On  ");
+      Serial.println("Tunning on");
 
       tunning1 = analogRead(joy_tunning1);
       tunning2 = analogRead(joy_tunning2);
       tunning3 = analogRead(joy_tunning3);
-      //tunning4 = analogRead(joy_tunning4);
+      tunning4 = analogRead(joy_tunning4);
+
                   
-      state_steer1 = digitalRead(switch_steer1);
-      state_steer2 = digitalRead(switch_steer2);
-      state_steer3 = digitalRead(switch_steer3);
-      state_steer4 = digitalRead(switch_steer4);
+      int state_steer1 = digitalRead(switch_steer1);
+      int state_steer2 = digitalRead(switch_steer2);
+      int state_steer3 = digitalRead(switch_steer3);
+      int state_steer4 = digitalRead(switch_steer4);
   
       Serial.print(state_steer1);
       Serial.print(state_steer2);
       Serial.print(state_steer3);
-      Serial.println(state_steer4);
+      Serial.print(state_steer4);
 
       // switch tunning 1 on
       if (state_steer1 == LOW && state_steer2 == HIGH && state_steer2 == HIGH && state_steer2 == HIGH) {
-        Serial.print(" T.Steer1: ");
-        kp1 = pulse_tunning_p(tunning1);
-        ki1 = pulse_tunning_i(tunning2);
-        kd1 = pulse_tunning_d(tunning3);
+        kp1 = pulse_tunning_pd(tunning1, kp1);
+        ki1 = pulse_tunning_i(tunning2, ki1);
+        kd1 = pulse_tunning_d(tunning3, kd1);
+        xx = pulse_tunning_d(tunning4, xx);
         Serial.print(" kp:");
         Serial.print(kp1);
         Serial.print(" ki:");
         Serial.print(ki1);
+        Serial.print(" xx:");
+        Serial.print(xx);
         Serial.print(" kd:");
         Serial.println(kd1);
         client.publish("steer1_kp",dtostrf(kp1, 5, 0, msgBuffer));
@@ -465,16 +453,21 @@ void loop() {
 
       // switch tunning 2 on
       if (state_steer1 == HIGH && state_steer2 == LOW && state_steer3 == HIGH && state_steer4 == HIGH) {
-        Serial.print(" T.Steer2: ");
-        kp2 = pulse_tunning_p(tunning1);
-        ki2 = pulse_tunning_i(tunning2);
-        kd2 = pulse_tunning_d(tunning3);
+        tunning1 = analogRead(joy_tunning1);
+        tunning2 = analogRead(joy_tunning2);
+        tunning3 = analogRead(joy_tunning3);
+        delay(500);
+        Serial.println(" T.STEER2: ");
+        kp2 = pulse_tunning_pd(tunning1, kp2);
+        ki2 = pulse_tunning_i(tunning2, ki2);
+        kd2 = pulse_tunning_d(tunning3, kd2);
+        xx = pulse_tunning_d(tunning4, xx);
         Serial.print(" kp:");
         Serial.print(kp2);
         Serial.print(" ki:");
         Serial.print(ki2);
         Serial.print(" kd:");
-        Serial.println(kd2);
+        Serial.print(kd2);
         client.publish("steer2_kp",dtostrf(kp2, 5, 0, msgBuffer));
         client.publish("steer2_ki",dtostrf(ki2, 5, 0, msgBuffer));
         client.publish("steer2_kd",dtostrf(kd2, 5, 0, msgBuffer));
@@ -482,16 +475,20 @@ void loop() {
 
      // switch tunning 3 on
      if (state_steer1 == HIGH && state_steer2 == HIGH && state_steer3 == LOW && state_steer4 == HIGH) {
-       Serial.print(" T.Steer3: ");
-       kp3 = pulse_tunning_p(tunning1);
-       ki3 = pulse_tunning_i(tunning2);
-       kd3 = pulse_tunning_d(tunning3);      
+       tunning1 = analogRead(joy_tunning1);
+       tunning2 = analogRead(joy_tunning2);
+       tunning3 = analogRead(joy_tunning3);
+       delay(500);
+       Serial.println(" T.STEER3: ");
+       kp3 = pulse_tunning_pd(tunning1, kp3);
+       ki3 = pulse_tunning_i(tunning2, ki3);
+       kd3 = pulse_tunning_d(tunning3, kd3);      
        Serial.print(" kp:");
        Serial.print(kp3);
        Serial.print(" ki:");
        Serial.print(ki3);
        Serial.print(" kd:");
-       Serial.println(kd3);
+       Serial.print(kd3);
        client.publish("steer3_kp",dtostrf(kp3, 5, 0, msgBuffer));
        client.publish("steer3_ki",dtostrf(ki3, 5, 0, msgBuffer));
        client.publish("steer3_kd",dtostrf(kd3, 5, 0, msgBuffer));
@@ -499,32 +496,35 @@ void loop() {
  
     // switch tunning 4 on
     if (state_steer1 == HIGH && state_steer2 == HIGH && state_steer3 == HIGH && state_steer4 == LOW) {
-      Serial.println(" T.Steer4: ");
-      kp4 = pulse_tunning_p(tunning1);
-      ki4 = pulse_tunning_i(tunning2);
-      kd4 = pulse_tunning_d(tunning3);
+      tunning1 = analogRead(joy_tunning1);
+      tunning2 = analogRead(joy_tunning2);
+      tunning3 = analogRead(joy_tunning3);
+      delay(500);
+      Serial.println(" T.STEER4: ");
+      kp4 = pulse_tunning_pd(tunning1, kp4);
+      ki4 = pulse_tunning_i(tunning2, ki4);
+      kd4 = pulse_tunning_d(tunning3, kd4);
+      //pulse_tunning_in = pulse_steer(e);
       Serial.print(" kp:");
       Serial.print(kp4);
       Serial.print(" ki:");
       Serial.print(ki4);
       Serial.print(" kd:");
-      Serial.println(kd4);
-      client.publish("steer4_kp",dtostrf(kp4, 5, 0, msgBuffer));
-      client.publish("steer4_ki",dtostrf(ki4, 5, 0, msgBuffer));
-      client.publish("steer4_kd",dtostrf(kd4, 5, 0, msgBuffer));
+      Serial.print(kd4);
+      client.publish("steer3_kp",dtostrf(kp4, 5, 0, msgBuffer));
+      client.publish("steer3_ki",dtostrf(ki4, 5, 0, msgBuffer));
+      client.publish("steer3_kd",dtostrf(kd4, 5, 0, msgBuffer));
       }
 
 
     Serial.println();
     }
-  }
+
   // Switch Main : off
   // Input smc dari pixhawk 
   else {
     digitalWrite(led_main, LOW);
-    Serial.println();  
-    Serial.println("Pixhawk Mode");
-      
+    Serial.println(" Pixhawk Mode");
 
     // Pixhawk process , Teguh, 16/10/2018
     pulse_pixhawk_1 = pulseIn(pixhawk_1, HIGH);
@@ -584,9 +584,10 @@ void loop() {
        }
     }
     //Serial.println(pulse_pixhawk);
-    }
-   
+  }
+  }    
   client.loop();
   delay(1000); 
 
-  }
+  
+}
