@@ -32,7 +32,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 
   if(strcmp(topic,"active") == 0){
-    status_pc = 1;
+    //status_pc = 1;
+    for (int i=0;i<length;i++) {
+       if ((char)payload[i]==;
+      Serial.print((char)payload[i]);
+  }
   }
   
 }
@@ -73,7 +77,7 @@ void reconnect() {
   }
 }
 
-//boolean subscribe (topic,)
+
 
 void setup() {
   // Serial begin

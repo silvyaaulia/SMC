@@ -104,7 +104,7 @@ int led_steer4;
 
 // Pin LED Indikator
 const int led_nn;                  //output nn
-const int led_main;                //output manual or pixhawk
+const int led_main = 13;                //output manual or pixhawk
 const int led_tunning;             //output tunning
 
 //Pulse
@@ -123,8 +123,8 @@ double azimuth;
 
 /* Declare IP Address */
 byte mac[]    = {  0xDA, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
-IPAddress ip(123, 45, 0, 9);        //IP for arduino
-IPAddress server(123, 45, 0, 10);   //IP for raspi/pc
+IPAddress ip(10, 48, 20, 37);        //IP for arduino
+IPAddress server(10, 48, 20, 36);   //IP for raspi/pc
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
@@ -148,7 +148,7 @@ void reconnect() {
       // Once connected, publish an announcement...
       // ... and resubscribe
       client.subscribe("MainControl");
-      client.subscribe
+      
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -381,7 +381,7 @@ void loop() {
       Serial.print(" Speed left: ");
       pulse_speed_in_left = pulse_speed(speed_left);
       Serial.print(pulse_speed_in_left);
-      client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
+      client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 4, 0, msgBuffer));
     }
     //Speed Control Right
     if (state_speed_right == LOW) {
@@ -391,7 +391,7 @@ void loop() {
       Serial.print(" Speed right: ");
       pulse_speed_in_right = pulse_speed(speed_right);
       Serial.println(pulse_speed_in_right);
-      client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
+      client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 4, 0, msgBuffer));
     }
 
 
@@ -410,7 +410,7 @@ void loop() {
       pulse_steer_in_left = pulse_steer(steer_leftx, steer_lefty);
       Serial.print(pulse_steer_in_left);
       if (pulse_steer_in_left > 1000 ) {
-        client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
+        client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 4, 0, msgBuffer));
       }
     }
     //Steer Control Right
@@ -422,7 +422,7 @@ void loop() {
       pulse_steer_in_right = pulse_steer(steer_rightx, steer_righty);
       Serial.println(pulse_steer_in_right);
       if (pulse_steer_in_right > 1000 ) {
-        client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+        client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 4, 0, msgBuffer));
       }
     }
  
@@ -459,9 +459,9 @@ void loop() {
         Serial.print(ki1);
         Serial.print(" kd:");
         Serial.println(kd1);
-        client.publish("steer1_kp",dtostrf(kp1, 2, 2, msgBuffer));
-        client.publish("steer1_ki",dtostrf(ki1, 5, 4, msgBuffer));
-        client.publish("steer1_kd",dtostrf(kd1, 5, 2, msgBuffer));
+        client.publish("steer1_kp",dtostrf(kp1, 4, 2, msgBuffer));
+        client.publish("steer1_ki",dtostrf(ki1, 6, 4, msgBuffer));
+        client.publish("steer1_kd",dtostrf(kd1, 4, 2, msgBuffer));
         } 
 
       // switch tunning 2 on
@@ -476,9 +476,9 @@ void loop() {
         Serial.print(ki2);
         Serial.print(" kd:");
         Serial.println(kd2);
-        client.publish("steer1_kp",dtostrf(kp2, 2, 2, msgBuffer));
+        client.publish("steer1_kp",dtostrf(kp2, 4, 2, msgBuffer));
         client.publish("steer1_ki",dtostrf(ki2, 5, 4, msgBuffer));
-        client.publish("steer1_kd",dtostrf(kd2, 5, 2, msgBuffer));
+        client.publish("steer1_kd",dtostrf(kd2, 4, 2, msgBuffer));
         }
 
      // switch tunning 3 on
@@ -493,9 +493,9 @@ void loop() {
        Serial.print(ki3);
        Serial.print(" kd:");
        Serial.println(kd3);
-       client.publish("steer1_kp",dtostrf(kp3, 2, 2, msgBuffer));
-       client.publish("steer1_ki",dtostrf(ki3, 5, 4, msgBuffer));
-       client.publish("steer1_kd",dtostrf(kd3, 5, 2, msgBuffer));
+       client.publish("steer1_kp",dtostrf(kp3, 4, 2, msgBuffer));
+       client.publish("steer1_ki",dtostrf(ki3, 6, 4, msgBuffer));
+       client.publish("steer1_kd",dtostrf(kd3, 4, 2, msgBuffer));
        }
  
     // switch tunning 4 on
@@ -510,9 +510,9 @@ void loop() {
       Serial.print(ki4);
       Serial.print(" kd:");
       Serial.println(kd4);
-      client.publish("steer1_kp",dtostrf(kp4, 2, 2, msgBuffer));
-      client.publish("steer1_ki",dtostrf(ki4, 5, 4, msgBuffer));
-      client.publish("steer1_kd",dtostrf(kd4, 5, 2, msgBuffer));
+      client.publish("steer1_kp",dtostrf(kp4, 4, 2, msgBuffer));
+      client.publish("steer1_ki",dtostrf(ki4, 6, 4, msgBuffer));
+      client.publish("steer1_kd",dtostrf(kd4, 4, 2, msgBuffer));
       }
 
 
@@ -538,10 +538,10 @@ void loop() {
        pulse_speed_in_left = 1100;
        pulse_steer_in_right = 1500;
        pulse_steer_in_left = 1500;
-       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
-       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
-       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
-       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 4, 0, msgBuffer));
+       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 4, 0, msgBuffer));
+       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 4, 0, msgBuffer));
+       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 4, 0, msgBuffer));
     }
     //Yaw Right
     else if ((pulse_pixhawk_4 > pulse_pixhawk_1 ) && (pulse_pixhawk_3 > pulse_pixhawk_2)){
@@ -549,10 +549,10 @@ void loop() {
        pulse_speed_in_left = 1800;
        pulse_steer_in_right = 1500;
        pulse_steer_in_left = 1500;
-       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
-       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
-       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
-       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 4, 0, msgBuffer));
+       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 4, 0, msgBuffer));
+       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 4, 0, msgBuffer));
+       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 4, 0, msgBuffer));
     }
     //Another
     else {
@@ -561,10 +561,10 @@ void loop() {
        pulse_speed_in_left = 1500;
        pulse_steer_in_right = 1500;
        pulse_steer_in_left = 1500;
-       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 5, 0, msgBuffer));
-       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
-       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
-       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+       client.publish("spc_speed1",dtostrf(pulse_speed_in_left, 4, 0, msgBuffer));
+       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 4, 0, msgBuffer));
+       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 4, 0, msgBuffer));
+       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 4, 0, msgBuffer));
        }
        else{ 
        pulse_speed_in_right = 1700;
@@ -577,9 +577,9 @@ void loop() {
        else if ((azimuth > 3.14) && (azimuth <= 6.28)){
        pulse_steer_in_right = map(azimuth, 3.15, 6.28, 1500, 1900);
        pulse_steer_in_left = pulse_steer_in_right;
-       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 5, 0, msgBuffer));
-       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 5, 0, msgBuffer));
-       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 5, 0, msgBuffer));
+       client.publish("spc_speed2",dtostrf(pulse_speed_in_right, 4, 0, msgBuffer));
+       client.publish("spc_steer1",dtostrf(pulse_steer_in_left, 4, 0, msgBuffer));
+       client.publish("spc_steer2",dtostrf(pulse_steer_in_right, 4, 0, msgBuffer));
        }
        
        }
@@ -590,5 +590,5 @@ void loop() {
   client.loop();
   delay(1000); 
 
-client.publish("tes","test");
+//client.publish("tes","test");
   }
